@@ -13,5 +13,5 @@ The `Data_loading.py` script in the directory showcases the process of extractin
 
 
 ### Retrieval and Question Answering
-The qa_pipeline.py script in the question_answering directory demonstrates setting up a retrieval pipeline with langchain and using a language model for question-answering.
+The model_pipeline_answer.py script in the  directory demonstrates setting up a retrieval pipeline with langchain and using a language model for question-answering.
 
