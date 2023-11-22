@@ -1,0 +1,42 @@
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering
+from sentence_transformers import SentenceTransformerEmbeddings
+from chroma import Chroma, RetrievalQA
+from transformers.pipelines import pipeline, HuggingFacePipeline
+
+# Choose the model you want to use (BERT or BART)
+# model_name = "bert-large-uncased-whole-word-masking-finetuned-squad"
+model_name = "facebook/bart-large-cnn"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+base_model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+
+def qa_pipeline():
+    pipe = pipeline(
+        'question-answering',
+        model=base_model,
+        tokenizer=tokenizer
+    )
+    local_qa = HuggingFacePipeline(pipeline=pipe)
+    return local_qa
+
+def qa_retrieval(instruction):
+    qa = qa_pipeline()
+    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    db = Chroma(persist_directory="db", embedding_function=embeddings, client_settings=CHROMA_SETTINGS)
+    retriever = db.as_retriever()
+
+    custom_prompt = "Specify your custom prompt here."
+    instruction_with_prompt = f"{custom_prompt} {instruction}"
+
+    qa_retrieval = RetrievalQA.from_chain_type(qa=qa, chain_type="stuff", retriever=retriever, return_source_documents=True)
+    generated_text = qa_retrieval(instruction_with_prompt)
+    answer = generated_text['result']
+
+    return answer, generated_text
+
+# Example usage
+instruction = "What is the capital of France?"
+
+answer, generated_text = qa_retrieval(instruction)
+print(f"Answer: {answer}")
+print(f"Generated Text: {generated_text}")
